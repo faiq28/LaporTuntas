@@ -39,3 +39,33 @@ button {
   background: #d9efff;
   color: #103b5b;
 }
+
+/* Peta (Leaflet) */
+.lt-marker {
+  background: transparent;
+  border: 0;
+}
+.lt-pin {
+  display: block;
+  border-radius: 9999px;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(15, 45, 75, 0.35);
+  transition: transform 0.15s;
+}
+.lt-marker:hover .lt-pin {
+  transform: scale(1.25);
+}
+.leaflet-container {
+  font: inherit;
+  z-index: 0;
+}
+:focus-visible {
+  outline: 2px solid #1687d9;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

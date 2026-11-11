@@ -3,28 +3,40 @@ import {
   ChartNoAxesCombined,
   ClipboardList,
   FilePlus2,
+  Info,
   LayoutDashboard,
+  Lock,
   ShieldCheck,
   X,
 } from "lucide-react";
-export type Page = "dashboard" | "reports" | "create" | "tracking" | "admin";
+import logo from "../assets/brand/logo-compact.png";
+export type Page =
+  | "dashboard"
+  | "reports"
+  | "create"
+  | "tracking"
+  | "admin"
+  | "about";
 const items = [
   { id: "dashboard", label: "Ringkasan", icon: LayoutDashboard },
   { id: "reports", label: "Jelajahi laporan", icon: ClipboardList },
   { id: "create", label: "Buat laporan", icon: FilePlus2 },
   { id: "tracking", label: "Pantau laporan", icon: Activity },
   { id: "admin", label: "Panel admin", icon: ShieldCheck },
+  { id: "about", label: "Tentang", icon: Info },
 ] as const;
 export default function Sidebar({
   page,
   onNavigate,
   open,
   onClose,
+  adminLocked = true,
 }: {
   page: Page;
   onNavigate: (p: Page) => void;
   open: boolean;
   onClose: () => void;
+  adminLocked?: boolean;
 }) {
   return (
     <>
@@ -33,19 +45,18 @@ export default function Sidebar({
         onClick={onClose}
       />
       <aside
-        className={`${open ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex h-dvh w-72 flex-col border-r border-slate-100 bg-white p-5 transition-transform lg:sticky lg:top-0 lg:z-auto lg:translate-x-0`}
+        className={`${open ? "translate-x-0" : "-translate-x-full max-lg:invisible"} fixed inset-y-0 left-0 z-50 flex h-dvh w-72 flex-col border-r border-slate-100 bg-white p-5 transition-[transform,visibility] lg:sticky lg:top-0 lg:z-auto lg:translate-x-0`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-600 text-white">
-              <Activity size={23} />
-            </div>
-            <div>
-              <p className="text-lg font-extrabold tracking-tight text-slate-900">
-                Lapor<span className="text-brand-600">Tuntas</span>
-              </p>
-              <p className="text-xs text-slate-400">Transparansi untuk semua</p>
-            </div>
+          <div>
+            <img
+              src={logo}
+              alt="LaporTuntas"
+              className="h-auto w-52"
+            />
+            <p className="mt-1.5 text-xs text-slate-400">
+              Transparansi untuk semua
+            </p>
           </div>
           <button
             className="rounded-lg p-2 text-slate-500 lg:hidden"
@@ -62,6 +73,7 @@ export default function Sidebar({
             {items.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
+                aria-current={page === id ? "page" : undefined}
                 onClick={() => {
                   onNavigate(id);
                   onClose();
@@ -71,8 +83,13 @@ export default function Sidebar({
                 <Icon size={18} />
                 {label}
                 {id === "admin" && (
-                  <span className="ml-auto rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                    DEMO
+                  <span className="ml-auto flex items-center gap-1.5">
+                    {adminLocked && (
+                      <Lock size={13} className="text-slate-400" />
+                    )}
+                    <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                      DEMO
+                    </span>
                   </span>
                 )}
               </button>

@@ -13,10 +13,13 @@ import {
   SearchCheck,
   MessageSquareText,
   ArrowUpRight as ExternalArrow,
+  ThumbsUp,
 } from "lucide-react";
-import type { Report } from "../types";
+import { categories, type Report } from "../types";
+import { newestFirst } from "../lib/format";
 import type { Page } from "./Sidebar";
 import StatusBadge from "./StatusBadge";
+import MapView from "./LazyMap";
 export default function Dashboard({
   reports,
   onNavigate,
@@ -62,6 +65,22 @@ export default function Dashboard({
     },
   ];
   const max = Math.max(1, reports.length);
+  const mapped = reports
+    .filter((r) => r.lat !== undefined && r.lng !== undefined)
+    .map((r) => ({
+      id: r.id,
+      lat: r.lat as number,
+      lng: r.lng as number,
+      title: r.title,
+      status: r.status,
+    }));
+  const byCategory = categories
+    .map((c) => ({ label: c, count: reports.filter((r) => r.category === c).length }))
+    .filter((c) => c.count > 0)
+    .sort((a, b) => b.count - a.count);
+  const popular = [...reports]
+    .sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0))
+    .slice(0, 3);
   return (
     <div className="space-y-7">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900 via-brand-700 to-brand-600 p-6 text-white shadow-soft md:p-8">
@@ -170,7 +189,7 @@ export default function Dashboard({
             </button>
           </div>
           <div className="space-y-1">
-            {reports.slice(0, 4).map((r) => (
+            {newestFirst(reports).slice(0, 4).map((r) => (
               <button
                 key={r.id}
                 onClick={() => onSelect(r)}
@@ -224,6 +243,12 @@ export default function Dashboard({
                 count: pending,
                 color: "bg-amber-500",
               },
+              {
+                label: "Perlu diperbaiki",
+                count: reports.filter((r) => r.status === "Perlu diperbaiki")
+                  .length,
+                color: "bg-rose-500",
+              },
             ].map((s) => (
               <div key={s.label}>
                 <div className="mb-2 flex items-center justify-between text-xs">
@@ -258,6 +283,76 @@ export default function Dashboard({
                   dipahami warga.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.5fr_1fr]">
+        <div className="flex flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-sm md:p-6">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="font-extrabold text-slate-900">
+                Peta sebaran laporan
+              </h2>
+              <p className="mt-1 text-xs text-slate-400">
+                {mapped.length} laporan memiliki titik lokasi
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigate("reports")}
+              className="flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700"
+            >
+              Buka peta <ArrowRight size={14} />
+            </button>
+          </div>
+          <MapView
+            markers={mapped}
+            className="min-h-72 flex-1"
+            onSelect={(id) => {
+              const r = reports.find((x) => x.id === id);
+              if (r) onSelect(r);
+            }}
+          />
+        </div>
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm md:p-6">
+            <h2 className="font-extrabold text-slate-900">Kategori laporan</h2>
+            <div className="mt-5 space-y-4">
+              {byCategory.map((c) => (
+                <div key={c.label}>
+                  <div className="mb-1.5 flex justify-between text-xs">
+                    <span className="font-semibold text-slate-600">
+                      {c.label}
+                    </span>
+                    <span className="font-bold text-slate-800">{c.count}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-brand-500"
+                      style={{ width: `${(c.count / max) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm md:p-6">
+            <h2 className="font-extrabold text-slate-900">Paling didukung</h2>
+            <div className="mt-3 space-y-1">
+              {popular.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => onSelect(r)}
+                  className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left hover:bg-slate-50"
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-700">
+                    {r.title}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-slate-400">
+                    <ThumbsUp size={13} /> {r.votes ?? 0}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
